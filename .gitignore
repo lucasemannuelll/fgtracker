@@ -1,0 +1,71 @@
+# Build directories
+bin/
+build/
+dist/
+out/
+
+# Object files
+*.o
+*.obj
+*.lo
+
+# Static libraries
+*.a
+*.lib
+
+# Shared libraries
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Executables
+*.exe
+*.out
+
+# Debug symbols
+*.dSYM/
+*.pdb
+
+# Coverage files
+*.gcda
+*.gcno
+*.gcov
+
+# SQLite database files
+*.db
+*.sqlite
+*.sqlite3
+
+# SQLite temporary files
+*.db-journal
+*.sqlite-journal
+*.sqlite3-journal
+*.db-wal
+*.sqlite-wal
+*.sqlite3-wal
+*.db-shm
+*.sqlite-shm
+*.sqlite3-shm
+
+# Vim
+*.swp
+*.swo
+*~
+
+# VS Code
+.vscode/
+
+# CLion / JetBrains
+.idea/
+cmake-build-*/
+
+# Emacs
+.#*
+\#*\#
+
+# macOS
+.DS_Store
+
+# Linux
+.Trash-*
