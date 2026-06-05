@@ -18,7 +18,8 @@ int db_open(sqlite3 **db, const char *path)
     int return_code = sqlite3_open(path, db);
     if (return_code != SQLITE_OK)
     {
-        fprintf(stderr, "db_open:\n\ncannot open database: %s\n", sqlite3_errmsg(*db));
+        fprintf(stderr, "db_open:\n\ncannot open database: %s\n", 
+                                        sqlite3_errmsg(*db));
         sqlite3_close(*db);
         return -1;
     }
@@ -70,7 +71,8 @@ int db_insert_session(sqlite3 *db, const char *shot_type,
     int return_code = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (return_code != SQLITE_OK)
     {
-        fprintf(stderr, "db_insert_session:\n\nprepare failed: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "db_insert_session:\n\nprepare failed: %s\n",
+                                        sqlite3_errmsg(db));
         return -1;
     }
 
@@ -84,7 +86,8 @@ int db_insert_session(sqlite3 *db, const char *shot_type,
 
     if (return_code != SQLITE_DONE)
     {
-        fprintf(stderr, "db_insert_session:\n\nstep failed: %s", sqlite3_errmsg(db));
+        fprintf(stderr, "db_insert_session:\n\nstep failed: %s", 
+                                        sqlite3_errmsg(db));
         return -1;
     }
 
@@ -97,4 +100,101 @@ int db_update_session(sqlite3 *db, int id, const char *shot_type,
     const char *sql = 
         "UPDATE sessions SET shot_type=?, fgm=?, fga=?, notes=? "
         "WHERE=id;";
+    
+    sqlite3_stmt *stmt;
+
+    int return_code = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (return_code != SQLITE_OK)
+    {
+        fprintf(stderr, "db_update_session:\n\nprepare failed: %s", 
+                                        sqlite3_errmsg(db));
+        return -1;
+    }
+
+    sqlite3_bind_text(stmt, 1, shot_type, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, fgm);
+    sqlite3_bind_int(stmt, 3, fga);
+    sqlite3_bind_text(stmt, 4, notes ? notes : "", -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 5, id);
+
+    return_code = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    if (return_code != SQLITE_DONE)
+    {
+        fprintf(stderr, "db_update_session:\n\nstep failed: %s", 
+                                        sqlite3_errmsg(db));
+        return -1;
+    }
+
+    if (sqlite3_changes(db) == 0)
+    {
+        fprintf(stderr, "db_update_session:\n\nno row with id = %d\n", id);
+        return -1;
+    }
+
+    return 0;
+}
+
+int db_delete_session(sqlite3 *db, int id)
+{
+    const char *sql = "DELETE FROM sessions WHERE id=?;";
+    
+    sqlite3_stmt *stmt;
+    int return_code = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (return_code != SQLITE_OK)
+    {
+        fprintf(stderr, "db_delete_session:\n\nprepare failed: %s", 
+                                        sqlite3_errmsg(db));
+        return -1;
+    }
+
+    sqlite3_bind_int(stmt, 1, id);
+
+    return_code = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    if (return_code != SQLITE_DONE)
+    {
+        fprintf(stderr, "db_delete_session:\n\nstep failed: %s", 
+                                        sqlite3_errmsg(db));
+        return -1;
+    }
+
+    if (sqlite3_changes(db) == 0)
+    {
+        fprintf(stderr, "db_delete_session:\n\nno row with id = %d\n", id);
+        return -1;
+    }
+
+    return 0;
+}
+
+int db_get_session(sqlite3 *db, int id, Session *out)
+{
+    const char *sql = 
+        "SELECT * FROM sessions "
+        "WHERE id=?;";
+
+    sqlite3_stmt *stmt;
+    int return_code = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (return_code != SQLITE_OK)
+    {
+        fprintf(stderr, "db_get_session:\n\nprepare failed: %s",
+                                        sqlite3_errmsg(db));
+        return -1;
+    }
+
+    sqlite3_bind_int(stmt, 1, id);
+
+    return_code = sqlite3_step(stmt);
+    if (return_code == SQLITE_ROW)
+    {
+        row_to_session(stmt, out);
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+    sqlite3_finalize(stmt);
+    return -1;
 }
