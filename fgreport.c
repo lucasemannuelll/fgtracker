@@ -7,7 +7,7 @@
 #include "models.h"
 #include "vendor/argtable3.h"
 
-#define MAX_SESSION 1024
+#define MAX_SESSIONS 1024
 
 static void print_header(void)
 {
@@ -78,7 +78,41 @@ static void print_stats(const Session *ss, int count, const char *label)
 }
 
 
-static void report_history(sqlite3 *db, const char *type, int last_n);
+static void report_history(sqlite3 *db, const char *type, int last_n)
+{
+    Session ss[MAX_SESSIONS];
+
+    int count = db_get_session_by_type(db, type, ss, MAX_SESSIONS);
+
+    if (count < 0)
+    {
+        printf("  Error fetching sessions.\n");
+        return;
+    }
+
+    if (count == 0)
+    {
+        printf("  No sessions found.\n");
+        return;
+    }
+
+    int start = 0;
+
+    if (last_n > 0 && last_n < count)
+    {
+        start = count - last_n;
+    }
+
+    print_header();
+
+    for (int i = 0; i < count; i++)
+    {
+        print_row(&ss[i]);
+    }
+
+    printf("\n");
+}
+
 static void report_stats(sqlite3 *db, const char *type);
 static void report_breakdown(sqlite3 *db);
 
