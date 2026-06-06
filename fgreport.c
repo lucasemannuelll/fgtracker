@@ -113,7 +113,33 @@ static void report_history(sqlite3 *db, const char *type, int last_n)
     printf("\n");
 }
 
-static void report_stats(sqlite3 *db, const char *type);
+static void report_stats(sqlite3 *db, const char *type)
+{
+    Session ss[MAX_SESSIONS];
+
+    int count = db_get_session_by_type(db, type, ss, MAX_SESSIONS);
+
+    if (count < 0)
+    {
+        printf("  Error fetching sessions.\n");
+        return;
+    }
+
+    char label[64];
+
+    if (type)
+    {
+        snprintf(label, sizeof(label), "shot type = %s", type);
+    }
+
+    else
+    {
+        snprintf(label, sizeof(label), "%s", "all shot types");
+    }
+
+    print_stats(ss, count, label);
+}
+
 static void report_breakdown(sqlite3 *db);
 
 typedef struct
