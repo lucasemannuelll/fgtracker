@@ -127,7 +127,7 @@ static void action_insert(sqlite3 *db)
     }
     else
     {
-        printf("  Failed to save session");
+        printf("  Failed to save session.\n");
     }
 }
 
@@ -202,9 +202,9 @@ static void action_edit(sqlite3 *db)
 
     else 
     {
-        if (strcmp(buf, SHOT_TYPE_LAY) == 0 ||
-            strcmp(buf, SHOT_TYPE_MID) == 0 ||
-            strcmp(buf, SHOT_TYPE_3PT) == 0)
+        if (strcmp(buf, SHOT_TYPE_LAY) != 0 &&
+            strcmp(buf, SHOT_TYPE_MID) != 0 &&
+            strcmp(buf, SHOT_TYPE_3PT) != 0)
         {
             printf("  Invalid shot type.\n");
             return;
@@ -272,5 +272,109 @@ static void action_edit(sqlite3 *db)
     }
 }
 
-static void action_delete(sqlite3 *db);
-static void print_menu(void);
+static void action_delete(sqlite3 *db)
+{
+    char buf[32];
+
+    printf("\n--- Delete session ---\n");
+    
+    action_list(db);
+
+    if (prompt_line("  Enter session ID to delete: ",
+        buf, sizeof(buf)) < 0)
+    {
+        return;
+    }
+
+    int id = (int)strtol(buf, NULL, 10);
+
+    char confirm[8];
+
+    printf("  Delete session %d? (y/Y): ", id);
+
+    if (prompt_line("", confirm, sizeof(confirm)) < 0)
+    {
+        return;
+    }
+
+    if (confirm[0] != 'y' || confirm[0] != 'Y')
+    {
+        printf("  Cancelled.\n");
+        return;
+    }
+
+    if (db_delete_session(db, id) == 0)
+    {
+        printf("  Session deleted.\n");
+    }
+    else
+    {
+        printf("  Failed to delete session.\n");
+    }
+}
+
+static void print_menu(void) 
+{
+    printf("\n=== fgctl ===\n");
+    printf("  1. Add session\n");
+    printf("  2. List sessions\n");
+    printf("  3. Edit session\n");
+    printf("  4. Delete session\n");
+    printf("  5. Exit\n");
+    printf("  > ");
+}
+
+int main(void)
+{
+    sqlite3 *db;
+    if (db_open(&db, DB_PATH) < 0)
+    {
+        return 1;
+    }
+
+    linenoiseHistorySetMaxLen(64);
+
+    char *line;
+
+    int running = 1;
+
+    while(running)
+    {
+        print_menu();
+
+        if (line == NULL)
+        {
+            break;
+        }
+
+        int choice = (int)strtol(line, NULL, 10);
+
+        linenoiseFree(line);
+
+        switch (choice) 
+        {
+            case 1:
+                action_insert(db);
+                break;
+            case 2:
+                action_list(db);
+                break;
+            case 3:
+                action_edit(db);
+                break;
+            case 4:
+                action_delete(db);
+                break;
+            case 5:
+                running = 0;
+                break;
+            default:
+                printf("  Invalid option.\n");
+                break;
+        }
+    }
+
+    db_close(db);
+    printf("Bye.\n");
+    return 0;
+}
