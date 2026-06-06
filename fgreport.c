@@ -140,7 +140,62 @@ static void report_stats(sqlite3 *db, const char *type)
     print_stats(ss, count, label);
 }
 
-static void report_breakdown(sqlite3 *db);
+static void report_breakdown(sqlite3 *db)
+{
+    const char *types[] = 
+    {
+        SHOT_TYPE_LAY,
+        SHOT_TYPE_MID,
+        SHOT_TYPE_3PT
+    };
+
+    int ntypes = 3;
+
+    printf("\n  FG%% Breakdown by Shot Type\n");
+    printf("  %-10s | %5s | %5s | %6s\n",
+           "Type",
+           "FGM",
+           "FGA",
+           "FG%");
+    printf("  -----------|-------|-------|-------\n");
+
+    for (int t = 0; t < ntypes; t++)
+    {
+        Session ss[MAX_SESSIONS];
+
+        int count = db_get_session_by_type(db, types[t], ss, MAX_SESSIONS);
+
+        if (count <= 0)
+        {
+            printf("  %-10s | %5s | %5s | %6s\n",
+                   types[t],
+                   "-",
+                   "-",
+                   "-");
+            continue;
+        }
+
+        int total_fgm = 0;
+        int total_fga = 0;
+
+        for (int i = 0; i < count; i++)
+        {
+            total_fgm += ss[i].fgm;
+            total_fga += ss[i].fga;
+        }
+
+        double pct = (total_fga > 0) ? 
+            (double)total_fgm / (double)total_fga * 100.0 : 0.0;
+
+        printf("  %-10s | %5d | %5d | %5.1f%%\n",
+               types[t],
+               total_fgm,
+               total_fga,
+               pct);
+    }
+
+    printf("\n");
+}
 
 typedef struct
 {
