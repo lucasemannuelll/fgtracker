@@ -6,24 +6,28 @@ libs := "-lsqlite3 -lm"
 default: build
 
 # Build both executables
-build: fgctl fgreport
+build: build/fgctl build/fgreport
+
+# Create build directory if it doesn't exist
+build:
+	mkdir -p build
 
 # Build the interactive controller
-fgctl:
-	{{cc}} {{flags}} -o fgctl fgctl.c db.c vendor/linenoise.c {{libs}}
+build/fgctl: build | fgctl.c db.c vendor/linenoise.c
+	{{cc}} {{flags}} -o build/fgctl fgctl.c db.c vendor/linenoise.c {{libs}}
 
 # Build the reporter
-fgreport:
-	{{cc}} {{flags}} -o fgreport fgreport.c db.c vendor/argtable3.c {{libs}}
+build/fgreport: build | fgreport.c db.c vendor/argtable3.c
+	{{cc}} {{flags}} -o build/fgreport fgreport.c db.c vendor/argtable3.c {{libs}}
 
 # Run the interactive controller
-run: fgctl
-	./fgctl
+run: build/fgctl
+	./build/fgctl
 
 # Run the reporter
-report *args: fgreport
-	./fgreport {{args}}
+report *args: build/fgreport
+	./build/fgreport {{args}}
 
 # Clean up binaries
 clean:
-	rm -f fgctl fgreport
+	rm -rf build
