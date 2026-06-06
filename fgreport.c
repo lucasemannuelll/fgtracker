@@ -328,4 +328,45 @@ static int parse_args(int argc, char *argv[], Args *out)
     return result;
 }
 
-int main(int argc, char *argv[]);
+int main(int argc, char *argv[])
+{
+    Args args = { 0 };
+
+    int parsed = parse_args(argc, argv, &args);
+
+    if (parsed == 1)
+    {
+        return 0;
+    }
+
+    if (parsed < 0)
+    {
+        return 1;
+    }
+
+    sqlite3 *db;
+
+    if (db_open(&db, DB_PATH) < 0)
+    {
+        return 1;
+    }
+
+    if (args.show_stats)
+    {
+        report_stats(db, args.type);
+    }
+
+    if (args.shot_breakdown)
+    {
+        report_breakdown(db);
+    }
+
+    if (args.show_history)
+    {
+        report_history(db, args.type, args.last_n);
+    }
+
+    db_close(db);
+
+    return 0;
+}
