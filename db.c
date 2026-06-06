@@ -6,7 +6,7 @@
 // [D A T A B A S E  S C H E M A]
 
 static const char *CREATE_TABLE_SQL = 
-    "CREATE TABLE IF NOT EXIST sessions ("
+    "CREATE TABLE IF NOT EXISTS sessions ("
     "   id        INTEGER PRIMARY KEY AUTOINCREMENT,"
     "   datetime  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),"
     "   shot_type TEXT    NOT NULL,"

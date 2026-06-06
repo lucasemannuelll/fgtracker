@@ -106,7 +106,7 @@ static void report_history(sqlite3 *db, const char *type, int last_n)
 
     print_header();
 
-    for (int i = 0; i < count; i++)
+    for (int i = start; i < count; i++)
     {
         print_row(&ss[i]);
     }

@@ -40,7 +40,7 @@ static int prompt_line(const char *prompt, char *buf, size_t size)
 
 static int prompt_shot_type(char *out, size_t size)
 {
-    char buf[32];
+    char buf[64];
     while (1) 
     {
         if (prompt_line("  Shot type (layup / midrange / 3pt): ",
@@ -53,6 +53,10 @@ static int prompt_shot_type(char *out, size_t size)
             strcmp(buf, SHOT_TYPE_MID) == 0 ||
             strcmp(buf, SHOT_TYPE_3PT) == 0)
         {
+            if (strlen(buf) >= size) {
+                printf("  Error: shot type too long.\n");
+                continue;
+            }
             snprintf(out, size, "%s", buf);
             return 0;
         }
@@ -202,12 +206,17 @@ static void action_edit(sqlite3 *db)
 
     else 
     {
-        if (strcmp(buf, SHOT_TYPE_LAY) != 0 &&
-            strcmp(buf, SHOT_TYPE_MID) != 0 &&
-            strcmp(buf, SHOT_TYPE_3PT) != 0)
+        if (strcmp(tmp, SHOT_TYPE_LAY) != 0 &&
+            strcmp(tmp, SHOT_TYPE_MID) != 0 &&
+            strcmp(tmp, SHOT_TYPE_3PT) != 0)
         {
             printf("  Invalid shot type.\n");
             return;
+        }
+
+        if (strlen(tmp) >= sizeof(shot_type)) {
+             printf("  Error: shot type too long.\n");
+             return;
         }
 
         snprintf(shot_type, sizeof(shot_type), "%s", tmp);
@@ -297,7 +306,7 @@ static void action_delete(sqlite3 *db)
         return;
     }
 
-    if (confirm[0] != 'y' || confirm[0] != 'Y')
+    if (confirm[0] != 'y' && confirm[0] != 'Y')
     {
         printf("  Cancelled.\n");
         return;
@@ -334,13 +343,12 @@ int main(void)
 
     linenoiseHistorySetMaxLen(64);
 
-    char *line;
-
     int running = 1;
 
     while(running)
     {
         print_menu();
+        char *line = linenoise("");
 
         if (line == NULL)
         {
