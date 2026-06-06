@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
+#include <time.h>
 
 #include "db.h"
 #include "models.h"
@@ -206,6 +207,125 @@ typedef struct
     int last_n;
 } Args;
 
-static int parse_args(int argc, char *argv[], Args *out);
+static int parse_args(int argc, char *argv[], Args *out)
+{
+    struct arg_lit *a_stats = 
+        arg_lit0(NULL, 
+                "stats", 
+                "show overall stats");
+
+    struct arg_lit *a_breakdown =
+        arg_lit0(NULL, 
+                "breakdown",
+                "show FG%% by type");
+    
+    struct arg_lit *a_history = 
+        arg_lit0(NULL, 
+                "history", 
+                "list session history");
+    
+    struct arg_str *a_type = 
+        arg_str0(NULL,
+                "type",
+                "<type>",
+                "filter by shot type: layup, midrange, 3pt");
+
+    struct arg_int *a_last =
+        arg_int0(NULL,
+                "last",
+                "<N>",
+                "show last N sessions (use with --history)");
+    
+    struct arg_lit *a_help = 
+        arg_lit0("h",
+                 "help",
+                 "print this help and exit");
+
+    struct arg_end *end = arg_end(20);
+
+    void *argtable[] = 
+    {
+        a_stats,
+        a_breakdown,
+        a_history,
+        a_type,
+        a_last,
+        a_help,
+        end
+    };
+
+    int result = 0;
+    
+    if (arg_nullcheck(argtable) != 0)
+    {
+        fprintf(stderr, "parse_int:\n\ninsufficient memory.\n");
+        result = -1;
+    }
+    else
+    {
+        a_last->ival[0] = 0;
+
+        int nerrors = arg_parse(argc, argv, argtable);
+
+        if (a_help->count > 0)
+        {
+            printf("Usage: fgreport");
+            arg_print_syntax(stdout, argtable, "\n");
+
+            printf("\nField goal session reporter.\n\n");
+
+            arg_print_glossary(stdout, argtable, "  %-20s %s\n");
+
+            result = 1;
+        }
+
+        else if (nerrors > 0)
+        {
+            arg_print_errors(stderr, end, "fgreport");
+
+            fprintf(stderr, "Try 'fgreport --help' for more information.\n");
+            result = -1;
+        }
+
+        else if (a_stats->count == 0 &&
+                 a_breakdown->count == 0 &&
+                 a_history->count == 0)
+        {
+            fprintf(stderr, 
+                    "fgreport: specify at least one of "
+                    "--stats, --breakdown, --history.\n");
+            fprintf(stderr, 
+                    "Try 'fgreport --help' for information.\n");
+            result = -1;
+        }
+        else
+        {
+            const char *type = (a_type->count > 0) ? a_type->sval[0] : NULL;
+
+            if (type
+                    && strcmp(type, SHOT_TYPE_LAY) != 0
+                    && strcmp(type, SHOT_TYPE_MID) != 0
+                    && strcmp(type, SHOT_TYPE_3PT) != 0)
+            {
+                fprintf(stderr,
+                        "fgreport: invalid --type '%s'."
+                        "Use: layup, midrange, 3pt\n",
+                        type);
+                result = -1;
+            }
+            else
+            {
+                out->show_stats = a_stats->count > 0;
+                out->shot_breakdown = a_breakdown->count > 0;
+                out->show_history = a_history->count > 0;
+                out->type = type;
+                out->last_n = a_last->ival[0];
+            }
+        }
+    }
+
+    arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+    return result;
+}
 
 int main(int argc, char *argv[]);
