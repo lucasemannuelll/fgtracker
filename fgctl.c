@@ -1,29 +1,36 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
 #include "db.h"
 #include "models.h"
-#include "vendor/linenoise.h"
 
 static void print_session(const Session *s)
 {
-    printf("  [%d] %s | %d/%d | %.1f%%\n",
+    printf("  %-4d | %-19s | %3d/%-3d | %5.1f%%\n",
            s->id, s->datetime, s->fgm, s->fga, s->fg_pct);
 }
 
 static int prompt_line(const char *prompt, char *buf, size_t size)
 {
-    char *line = linenoise(prompt);
-    
-    if (line == NULL)
+    if (prompt != NULL && prompt[0] != '\0')
+    {
+        printf("%s", prompt);
+        fflush(stdout);
+    }
+
+    if (fgets(buf, (int)size, stdin) == NULL)
     {
         return -1;
     }
-    
-    snprintf(buf, size, "%s", line);
-    linenoiseFree(line);
-    
+
+    size_t len = strlen(buf);
+    if (len > 0 && buf[len - 1] == '\n')
+    {
+        buf[len - 1] = '\0';
+    }
+
     return 0;
 }
 
@@ -87,27 +94,24 @@ static void action_list(sqlite3 *db)
 {
     Session sessions[256];
     int count = db_get_all_sessions(db, sessions, 256);
-    
-    if (count < 0)
+    if (count < 0) 
     {
         printf("  Error fetching sessions.\n");
         return;
     }
-    
-    if (count == 0)
+
+    if (count == 0) 
     {
         printf("  No sessions saved yet.\n");
         return;
     }
-    
-    printf("\n  ID  | Date/time           | FGM/FGA | FG%%\n");
-    printf("  -----|---------------------|---------|------\n");
-    
+    // Fixed header alignment
+    printf("\n  %-4s | %-19s | %-7s | %s\n", "ID", "Date/time", "FGM/FGA", "FG%");
+    printf("  %-4s-+-%-19s-+-%-7s-+-%s\n", "----", "-------------------", "-------", "-----");
     for (int i = 0; i < count; i++)
     {
         print_session(&sessions[i]);
     }
-    
     printf("\n");
 }
 
@@ -123,9 +127,16 @@ static void action_edit(sqlite3 *db)
         return;
     }
     
-    int id = (int)strtol(buf, NULL, 10);
+    char *endptr;
+    long id_l = strtol(buf, &endptr, 10);
+    if (*endptr != '\0') 
+    {
+        printf("  Invalid ID.\n");
+        return;
+    }
+    int id = (int)id_l;
+
     Session existing;
-    
     if (db_get_session(db, id, &existing) < 0)
     {
         printf("  No session with this ID (%d).\n", id);
@@ -164,6 +175,7 @@ static void action_edit(sqlite3 *db)
     {
         printf("  Session updated.\n");
     }
+
     else
     {
         printf("  Failed to update session.\n");
@@ -182,9 +194,16 @@ static void action_delete(sqlite3 *db)
         return;
     }
     
-    int id = (int)strtol(buf, NULL, 10);
+    char *endptr;
+    long id_l = strtol(buf, &endptr, 10);
+    if (*endptr != '\0') 
+    {
+        printf("  Invalid ID.\n");
+        return;
+    }
+    int id = (int)id_l;
+
     char confirm[8];
-    
     printf("  Delete session %d? (y/Y): ", id);
     
     if (prompt_line("", confirm, sizeof(confirm)) < 0)
@@ -228,44 +247,57 @@ int main(void)
         return 1;
     }
     
-    linenoiseHistorySetMaxLen(64);
     int running = 1;
     
     while (running)
     {
         print_menu();
-        char *line = linenoise("");
+        char line[32];
         
-        if (line == NULL)
+        if (fgets(line, sizeof(line), stdin) == NULL)
         {
+            printf("\n");
             break;
         }
         
-        int choice = (int)strtol(line, NULL, 10);
-        linenoiseFree(line);
+        size_t len = strlen(line);
+        if (len > 0 && line[len - 1] == '\n') 
+        {
+            line[len - 1] = '\0';
+        }
+
+        if (line[0] == '\0')
+        {
+            continue;
+        }
+
+        char *endptr;
+        long choice_l = strtol(line, &endptr, 10);
+        if (*endptr != '\0')
+        {
+            printf("  Invalid option.\n");
+            continue;
+        }
+
+        int choice = (int)choice_l;
         
         switch (choice)
         {
             case 1:
                 action_insert(db);
                 break;
-                
             case 2:
                 action_list(db);
                 break;
-                
             case 3:
                 action_edit(db);
                 break;
-                
             case 4:
                 action_delete(db);
                 break;
-                
             case 5:
                 running = 0;
                 break;
-                
             default:
                 printf("  Invalid option.\n");
                 break;

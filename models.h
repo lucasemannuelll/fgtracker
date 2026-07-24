@@ -1,7 +1,7 @@
 #ifndef MODELS_H
 #define MODELS_H
 
-#define DB_PATH "fgtracker.db"
+#define DB_PATH "stats.db"
 
 typedef struct 
 {
