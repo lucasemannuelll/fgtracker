@@ -10,14 +10,10 @@ build-dir:
     mkdir -p build
 
 build-fgctl: build-dir
-    {{cc}} {{flags}} -o build/fgctl \
-        fgctl.c db.c vendor/linenoise.c \
-        {{libs}}
+    {{cc}} {{flags}} -o build/fgctl fgctl.c db.c {{libs}}
 
 build-fgreport: build-dir
-    {{cc}} {{flags}} -o build/fgreport \
-        fgreport.c db.c vendor/argtable3.c \
-        {{libs}}
+    {{cc}} {{flags}} -o build/fgreport fgreport.c db.c {{libs}}
 
 run: build-fgctl
     ./build/fgctl

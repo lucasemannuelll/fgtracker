@@ -146,15 +146,15 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     }
     
     printf("\n=== Career Stats (sessions: %d) ===\n", count);
-    printf("  Total FGM            : %d\n", total_fgm);
-    printf("  Total FGA            : %d\n", total_fga);
-    printf("  Overall FG%%         : %.1f%%\n", overall_pct);
-    printf("  Best session         : [%d] %.1f%%\n", best_id, best_pct);
-    printf("  Worst session        : [%d] %.1f%%\n", worst_id, worst_pct);
-    printf("  Avg makes/session    : %.1f\n", avg_fgm);
+    printf("  Total FGM: %d\n", total_fgm);
+    printf("  Total FGA: %d\n", total_fga);
+    printf("  Overall FG%%: %.1f%%\n", overall_pct);
+    printf("  Best session: [%d] %.1f%%\n", best_id, best_pct);
+    printf("  Worst session: [%d] %.1f%%\n", worst_id, worst_pct);
+    printf("  Avg makes/session: %.1f\n", avg_fgm);
     printf("  Avg attempts/session : %.1f\n", avg_fga);
-    printf("  Std dev (FG%%)       : %.2f%%\n", stddev);
-    printf("  Std dev last 10      : %.2f%%\n", stddev_last10);
+    printf("  Std dev (FG%%): %.2f%%\n", stddev);
+    printf("  Std dev last 10: %.2f%%\n", stddev_last10);
     printf("\n");
 }
 
@@ -344,6 +344,7 @@ int main(int argc, char *argv[])
     
     if (parsed == 1)
     {
+        print_usage(argv[0]);
         return 0;
     }
     if (parsed < 0)
