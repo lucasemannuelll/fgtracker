@@ -329,8 +329,6 @@ static int parse_args(int argc, char *argv[], Args *out)
     int any = out->show_history + out->show_stats + out->show_histogram;
     if (any == 0) 
     {
-        fprintf(stderr,
-                "fgreport: specify at least one of --history, --stats, --histogram\n");
         return -1;
     }
 
@@ -344,11 +342,11 @@ int main(int argc, char *argv[])
     
     if (parsed == 1)
     {
-        print_usage(argv[0]);
         return 0;
     }
     if (parsed < 0)
     {
+        print_usage(argv[0]);
         return 1;
     }
     
