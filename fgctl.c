@@ -21,15 +21,11 @@ static int prompt_line(const char *prompt, char *buf, size_t size)
     }
 
     if (fgets(buf, (int)size, stdin) == NULL)
-    {
         return -1;
-    }
 
     size_t len = strlen(buf);
     if (len > 0 && buf[len - 1] == '\n')
-    {
         buf[len - 1] = '\0';
-    }
 
     return 0;
 }
@@ -41,9 +37,7 @@ static int prompt_int(const char *prompt, int *out)
     while (1)
     {
         if (prompt_line(prompt, buf, sizeof(buf)) < 0)
-        {
             return -1;
-        }
         
         char *end;
         long val = strtol(buf, &end, 10);
@@ -65,14 +59,10 @@ static void action_insert(sqlite3 *db)
     printf("\n--- New Session ---\n");
     
     if (prompt_int("  FGM (makes): ", &fgm) < 0)
-    {
         return;
-    }
     
     if (prompt_int("  FGA (attempts): ", &fga) < 0)
-    {
         return;
-    }
     
     if (fgm > fga)
     {
@@ -81,13 +71,9 @@ static void action_insert(sqlite3 *db)
     }
     
     if (db_insert_session(db, fgm, fga) == 0)
-    {
         printf("  Session saved.\n");
-    }
     else
-    {
         printf("  Failed to save session.\n");
-    }
 }
 
 static void action_list(sqlite3 *db)
@@ -109,9 +95,7 @@ static void action_list(sqlite3 *db)
     printf("\n  %-4s | %-19s | %-7s | %s\n", "ID", "Date/time", "FGM/FGA", "FG%");
     printf("  %-4s-+-%-19s-+-%-7s-+-%s\n", "----", "-------------------", "-------", "-----");
     for (int i = 0; i < count; i++)
-    {
         print_session(&sessions[i]);
-    }
     printf("\n");
 }
 
@@ -123,9 +107,7 @@ static void action_edit(sqlite3 *db)
     action_list(db);
     
     if (prompt_line("  Enter session ID to edit: ", buf, sizeof(buf)) < 0)
-    {
         return;
-    }
     
     char *endptr;
     long id_l = strtol(buf, &endptr, 10);
@@ -153,17 +135,13 @@ static void action_edit(sqlite3 *db)
     printf("  FGM [%d]: ", existing.fgm);
     
     if (prompt_line("", tmp, sizeof(tmp)) == 0 && tmp[0] != '\0')
-    {
         fgm = (int)strtol(tmp, NULL, 10);
-    }
     
     int fga = existing.fga;
     printf("  FGA [%d]: ", existing.fga);
     
     if (prompt_line("", tmp, sizeof(tmp)) == 0 && tmp[0] != '\0')
-    {
         fga = (int)strtol(tmp, NULL, 10);
-    }
     
     if (fgm > fga)
     {
@@ -172,14 +150,10 @@ static void action_edit(sqlite3 *db)
     }
     
     if (db_update_session(db, id, fgm, fga) == 0)
-    {
         printf("  Session updated.\n");
-    }
 
     else
-    {
         printf("  Failed to update session.\n");
-    }
 }
 
 static void action_delete(sqlite3 *db)
@@ -190,9 +164,7 @@ static void action_delete(sqlite3 *db)
     action_list(db);
     
     if (prompt_line("  Enter session ID to delete: ", buf, sizeof(buf)) < 0)
-    {
         return;
-    }
     
     char *endptr;
     long id_l = strtol(buf, &endptr, 10);
@@ -207,9 +179,7 @@ static void action_delete(sqlite3 *db)
     printf("  Delete session %d? (y/Y): ", id);
     
     if (prompt_line("", confirm, sizeof(confirm)) < 0)
-    {
         return;
-    }
     
     if (confirm[0] != 'y' && confirm[0] != 'Y')
     {
@@ -218,13 +188,9 @@ static void action_delete(sqlite3 *db)
     }
     
     if (db_delete_session(db, id) == 0)
-    {
         printf("  Session deleted.\n");
-    }
     else
-    {
         printf("  Failed to delete session.\n");
-    }
 }
 
 static void print_menu(void)
@@ -243,9 +209,7 @@ int main(void)
     sqlite3 *db;
     
     if (db_open(&db, DB_PATH) < 0)
-    {
         return 1;
-    }
     
     int running = 1;
     
@@ -262,22 +226,16 @@ int main(void)
         
         size_t len = strlen(line);
         if (len > 0 && line[len - 1] == '\n') 
-        {
             line[len - 1] = '\0';
-        }
 
         if (line[0] == '\0')
-        {
             continue;
-        }
 
         char *endptr;
         long choice_l = strtol(line, &endptr, 10);
         if (*endptr != '\0')
-        {
             printf("  Invalid option.\n");
             continue;
-        }
 
         int choice = (int)choice_l;
         
