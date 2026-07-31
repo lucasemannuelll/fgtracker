@@ -8,21 +8,17 @@
 #include "models.h"
 
 #define MAX_SESSIONS 1024
+#define MAX_BAR_WIDTH 50
 
 static const char* time_filter_sql(int opt_week, int opt_month, int opt_year)
 {
     if (opt_week)
-    {
         return "datetime('now', '-7 days')";
-    }
     if (opt_month)
-    {
         return "datetime('now', '-1 month')";
-    }
     if (opt_year)
-    {
         return "datetime('now', '-1 year')";
-    }
+
     return NULL;
 }
 
@@ -32,13 +28,9 @@ static void report_history(sqlite3 *db, int last_n, const char *time_filter)
     int count;
     
     if (time_filter)
-    {
         count = db_get_sessions_filtered(db, ss, MAX_SESSIONS, time_filter);
-    }
     else
-    {
         count = db_get_all_sessions(db, ss, MAX_SESSIONS);
-    }
     
     if (count <= 0)
     {
@@ -48,9 +40,7 @@ static void report_history(sqlite3 *db, int last_n, const char *time_filter)
     
     int start = 0;
     if (last_n > 0 && last_n < count)
-    {
         start = count - last_n;
-    }
     
     printf("\n  %-4s | %-19s | %7s | %6s\n", "ID", "Date/time", "FGM/FGA", "FG%%");
     printf("  -----|---------------------|---------|-------\n");
@@ -69,14 +59,10 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     int count;
     
     if (time_filter)
-    {
         count = db_get_sessions_filtered(db, ss, MAX_SESSIONS, time_filter);
-    }
 
     else
-    {
         count = db_get_all_sessions(db, ss, MAX_SESSIONS);
-    }
     
     if (count <= 0)
     {
@@ -131,9 +117,7 @@ static void report_stats(sqlite3 *db, const char *time_filter)
         double sum_pct10 = 0.0;
         int start = count - last10_count;
         for (int i = start; i < count; i++)
-        {
             sum_pct10 += ss[i].fg_pct;
-        }
         
         double mean_pct10 = sum_pct10 / last10_count;
         double var_sum10 = 0.0;
@@ -164,14 +148,9 @@ static void report_histogram(sqlite3 *db, const char *time_filter)
     int count;
     
     if (time_filter)
-    {
         count = db_get_sessions_filtered(db, ss, MAX_SESSIONS, time_filter);
-    }
-    
     else
-    {
         count = db_get_all_sessions(db, ss, MAX_SESSIONS);
-    }
     
     if (count <= 0)
     {
@@ -184,45 +163,41 @@ static void report_histogram(sqlite3 *db, const char *time_filter)
     for (int i = 0; i < count; i++)
     {
         int pct = (int)(ss[i].fg_pct / 10.0);
-        if (pct < 0)
-        {
-            pct = 0;
-        }
 
-        if (pct > 9)
-        {
-            pct = 9;
-        }
+        if (pct < 0) pct = 0;
+        if (pct > 9) pct = 9;
+
         bins[pct]++;
+    }
+
+    int max_count = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        if (bins[i] > max_count)
+            max_count = bins[i];
     }
     
     printf("\n=== FG%% Histogram (10%% bins) ===\n");
-    
     for (int i = 0; i < 10; i++)
     {
         int low = i * 10;
         int high = low + 9;
         
-        if (i == 9)
-        {
-            high = 100;
-        }
-        // Fixed alignment: %3d for low, %3d for high, and add a space after the colon
+        if (i == 9) high = 100;
+
         printf("  %3d%%–%3d%% : ", low, high);
         
-        int bar_len = bins[i];
-        for (int b = 0; b < bar_len; b++)
+        int bar_len;
+        if (max_count > 0)
         {
+            bar_len = (bins[i] * MAX_BAR_WIDTH) / max_count;
+            if (bar_len < 1 && bins[i] > 0)
+                bar_len = 1;
+        }
+        else bar_len = 0;
+
+        for (int j = 0; j < bar_len; j++)
             printf("█");
-        }
-        
-        // Add spacing to align the numbers - calculate how many spaces needed
-        // Assuming max bar width of 50 characters (adjust as needed)
-        int max_bar_width = 14;
-        if (bar_len < max_bar_width)
-        {
-            printf("%*s", max_bar_width - bar_len, "");
-        }
         
         printf(" (%d)\n", bins[i]);
     }
@@ -260,40 +235,19 @@ static int parse_args(int argc, char *argv[], Args *out)
     for (int i = 1; i < argc; i++)
     {
         if (strcmp(argv[i], "--history") == 0) 
-        {
             out->show_history = 1;
-        } 
-        
         else if (strcmp(argv[i], "--stats") == 0) 
-        {
             out->show_stats = 1;
-        } 
-
         else if (strcmp(argv[i], "--histogram") == 0) 
-        {
             out->show_histogram = 1;
-        }
-
         else if (strcmp(argv[i], "--week") == 0) 
-        {
             out->filter_week = 1;
-        }
-
         else if (strcmp(argv[i], "--month") == 0) 
-        {
             out->filter_month = 1;
-        }
-        
         else if (strcmp(argv[i], "--year") == 0) 
-        {
             out->filter_year = 1;
-        } 
-
         else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) 
-        {
             return 1;
-        } 
-
         else if (strcmp(argv[i], "--last") == 0) 
         {
             if (i + 1 >= argc) 
@@ -327,10 +281,8 @@ static int parse_args(int argc, char *argv[], Args *out)
     }
 
     int any = out->show_history + out->show_stats + out->show_histogram;
-    if (any == 0) 
-    {
-        return -1;
-    }
+
+    if (any == 0)  return -1;
 
     return 0;
 }
@@ -340,10 +292,8 @@ int main(int argc, char *argv[])
     Args args = {0};
     int parsed = parse_args(argc, argv, &args);
     
-    if (parsed == 1)
-    {
-        return 0;
-    }
+    if (parsed == 1) return 0;
+
     if (parsed < 0)
     {
         print_usage(argv[0]);
@@ -352,24 +302,16 @@ int main(int argc, char *argv[])
     
     sqlite3 *db;
     if (db_open(&db, DB_PATH) < 0)
-    {
         return 1;
-    }
     
     const char *tf = time_filter_sql(args.filter_week, args.filter_month, args.filter_year);
     
     if (args.show_history)
-    {
         report_history(db, args.last_n, tf);
-    }
     if (args.show_stats)
-    {
         report_stats(db, tf);
-    }
     if (args.show_histogram)
-    {
         report_histogram(db, tf);
-    }
     
     db_close(db);
     return 0;
