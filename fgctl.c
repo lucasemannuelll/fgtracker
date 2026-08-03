@@ -234,8 +234,10 @@ int main(void)
         char *endptr;
         long choice_l = strtol(line, &endptr, 10);
         if (*endptr != '\0')
+        {
             printf("  Invalid option.\n");
             continue;
+        }
 
         int choice = (int)choice_l;
         
