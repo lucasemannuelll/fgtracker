@@ -17,7 +17,11 @@ int db_open(sqlite3 **db, const char *path)
     
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "db_open: cannot open database: %s\n", sqlite3_errmsg(*db));
+        fprintf(
+            stderr,
+            "db_open: cannot open database: %s\n",
+            sqlite3_errmsg(*db)
+        );
         sqlite3_close(*db);
         return -1;
     }
@@ -60,7 +64,11 @@ int db_insert_session(sqlite3 *db, int fgm, int fga)
     
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "db_insert_session: prepare failed: %s\n", sqlite3_errmsg(db));
+        fprintf(
+            stderr, 
+            "db_insert_session: prepare failed: %s\n", 
+            sqlite3_errmsg(db)
+        );
         return -1;
     }
     
@@ -71,7 +79,11 @@ int db_insert_session(sqlite3 *db, int fgm, int fga)
     
     if (rc != SQLITE_DONE) 
     {
-        fprintf(stderr, "db_insert_session: step failed: %s\n", sqlite3_errmsg(db));
+        fprintf(
+            stderr, 
+            "db_insert_session: step failed: %s\n", 
+            sqlite3_errmsg(db)
+        );
         return -1;
     }
     
@@ -86,19 +98,28 @@ int db_update_session(sqlite3 *db, int id, int fgm, int fga)
     
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "db_update_session: prepare failed: %s\n", sqlite3_errmsg(db));
+        fprintf(
+            stderr, 
+            "db_update_session: prepare failed: %s\n", 
+            sqlite3_errmsg(db)
+        );
         return -1;
     }
     
     sqlite3_bind_int(stmt, 1, fgm);
     sqlite3_bind_int(stmt, 2, fga);
     sqlite3_bind_int(stmt, 3, id);
+
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
     
     if (rc != SQLITE_DONE) 
     {
-        fprintf(stderr, "db_update_session: step failed: %s\n", sqlite3_errmsg(db));
+        fprintf(
+            stderr, 
+            "db_update_session: step failed: %s\n", 
+            sqlite3_errmsg(db)
+        );
         return -1;
     }
     
@@ -119,17 +140,27 @@ int db_delete_session(sqlite3 *db, int id)
     
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "db_delete_session: prepare failed: %s\n", sqlite3_errmsg(db));
+        fprintf(
+            stderr, 
+            "db_delete_session: prepare failed: %s\n", 
+            sqlite3_errmsg(db)
+        );
         return -1;
     }
     
     sqlite3_bind_int(stmt, 1, id);
+    
     rc = sqlite3_step(stmt);
+    
     sqlite3_finalize(stmt);
     
     if (rc != SQLITE_DONE) 
     {
-        fprintf(stderr, "db_delete_session: step failed: %s\n", sqlite3_errmsg(db));
+        fprintf(
+            stderr, 
+            "db_delete_session: step failed: %s\n", 
+            sqlite3_errmsg(db)
+        );
         return -1;
     }
     
@@ -150,7 +181,11 @@ int db_get_session(sqlite3 *db, int id, Session *out)
     
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "db_get_session: prepare failed: %s\n", sqlite3_errmsg(db));
+        fprintf(
+            stderr, 
+            "db_get_session: prepare failed: %s\n", 
+            sqlite3_errmsg(db)
+        );
         return -1;
     }
     
@@ -176,7 +211,11 @@ int db_get_all_sessions(sqlite3 *db, Session *out, int capacity)
     
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "db_get_all_sessions: prepare failed: %s\n", sqlite3_errmsg(db));
+        fprintf(
+            stderr, 
+            "db_get_all_sessions: prepare failed: %s\n", 
+            sqlite3_errmsg(db)
+        );
         return -1;
     }
     
@@ -205,9 +244,11 @@ int db_get_sessions_filtered(sqlite3 *db, Session *out, int capacity,
     }
     else 
     {
-        snprintf(sql, sizeof(sql),
-                 "SELECT * FROM sessions WHERE datetime >= %s ORDER BY datetime ASC;",
-                 time_filter);
+        snprintf(sql, sizeof(sql), 
+                "SELECT * FROM sessions "
+                "WHERE datetime >= %s "
+                "ORDER BY datetime ASC;", 
+                time_filter);
     }
     
     sqlite3_stmt *stmt;
@@ -215,7 +256,11 @@ int db_get_sessions_filtered(sqlite3 *db, Session *out, int capacity,
     
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "db_get_sessions_filtered: prepare failed: %s\n", sqlite3_errmsg(db));
+        fprintf(
+            stderr, 
+            "db_get_sessions_filtered: prepare failed: %s\n", 
+            sqlite3_errmsg(db)
+        );
         return -1;
     }
     

@@ -48,7 +48,11 @@ static void report_history(sqlite3 *db, int last_n, const char *time_filter)
     for (int i = start; i < count; i++)
     {
         printf("  %-4d | %-19s | %3d/%-3d | %5.1f%%\n",
-               ss[i].id, ss[i].datetime, ss[i].fgm, ss[i].fga, ss[i].fg_pct);
+                ss[i].id,
+                ss[i].datetime,
+                ss[i].fgm,
+                ss[i].fga,
+                ss[i].fg_pct);
     }
     printf("\n");
 }
@@ -97,7 +101,9 @@ static void report_stats(sqlite3 *db, const char *time_filter)
         }
     }
     
-    double overall_pct = (total_fga > 0) ? (double)total_fgm / total_fga * 100.0 : 0.0;
+    double overall_pct = (total_fga > 0) 
+                            ? (double)total_fgm / total_fga * 100.0 
+                            : 0.0;
     double avg_fgm = sum_fgm / count;
     double avg_fga = sum_fga / count;
     double mean_pct = sum_pct / count;
@@ -246,7 +252,7 @@ static int parse_args(int argc, char *argv[], Args *out)
             out->filter_month = 1;
         else if (strcmp(argv[i], "--year") == 0) 
             out->filter_year = 1;
-        else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) 
+        else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
             return 1;
         else if (strcmp(argv[i], "--last") == 0) 
         {
@@ -260,7 +266,10 @@ static int parse_args(int argc, char *argv[], Args *out)
             long val = strtol(argv[i], &endptr, 10);
             if (*endptr != '\0' || val < 0) 
             {
-                fprintf(stderr, "fgreport: --last requires a non-negative integer\n");
+                fprintf(
+                    stderr, 
+                    "fgreport: --last requires a non-negative integer\n"
+                );
                 return -1;
             }
             out->last_n = (int)val;
@@ -276,7 +285,10 @@ static int parse_args(int argc, char *argv[], Args *out)
     int filters = out->filter_week + out->filter_month + out->filter_year;
     if (filters > 1)
     {
-        fprintf(stderr, "fgreport: use only one of --week, --month, --year\n");
+        fprintf(
+            stderr, 
+            "fgreport: use only one of --week, --month, --year\n"
+        );
         return -1;
     }
 
@@ -304,7 +316,11 @@ int main(int argc, char *argv[])
     if (db_open(&db, DB_PATH) < 0)
         return 1;
     
-    const char *tf = time_filter_sql(args.filter_week, args.filter_month, args.filter_year);
+    const char *tf = time_filter_sql(
+        args.filter_week,
+        args.filter_month,
+        args.filter_year
+    );
     
     if (args.show_history)
         report_history(db, args.last_n, tf);

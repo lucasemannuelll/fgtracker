@@ -9,7 +9,11 @@
 static void print_session(const Session *s)
 {
     printf("  %-4d | %-19s | %3d/%-3d | %5.1f%%\n",
-           s->id, s->datetime, s->fgm, s->fga, s->fg_pct);
+       s->id,
+       s->datetime,
+       s->fgm,
+       s->fga,
+       s->fg_pct);
 }
 
 static int prompt_line(const char *prompt, char *buf, size_t size)
