@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,6 +8,12 @@
 
 #define MAX_SESSIONS 1024
 #define MAX_BAR_WIDTH 50
+
+#define COLOR_RESET "\033[0m"
+#define COLOR_HOT "\033[38;5;214m"
+#define COLOR_COLD "\033[38;5;39m"
+#define COLOR_STEADY "\033[38;5;15"
+#define COLOR_BOLD "\033[1m"
 
 static const char* time_filter_sql(int opt_week, int opt_month, int opt_year)
 {
@@ -57,6 +62,52 @@ static void report_history(sqlite3 *db, int last_n, const char *time_filter)
     printf("\n");
 }
 
+static const char* get_trend(Session *sessions, int total_count, int recent_count)
+{
+    if (total_count < 3) 
+        return NULL;
+
+    double overall_sum = 0.0;
+    for (int i = 0; i < total_count; i++)
+    {
+        overall_sum += sessions[i].fg_pct;
+    }
+
+    double overall_avg = overall_sum / total_count;
+
+    int n = (recent_count < total_count) ? recent_count : total_count;
+    double recent_sum = 0.0;
+    for (int i = total_count - n; i < total_count; i++)
+    {
+        recent_sum += sessions[i].fg_pct;
+    }
+
+    double recent_avg = recent_sum / n;
+
+    double diff = recent_avg - overall_avg;
+    if (diff > 5.0) 
+        return "HOT";
+    else if (diff < -5.0) 
+        return "COLD";
+    else 
+        return "STEADY";
+}
+
+static const char* get_trend_color(const char* trend)
+{
+    if (trend == NULL)
+        return COLOR_RESET;
+    
+    if (strcmp(trend, "HOT") == 0)
+        return COLOR_HOT;
+    else if (strcmp(trend, "COLD") == 0)
+        return COLOR_COLD;
+    else if (strcmp(trend, "STEADY") == 0)
+        return COLOR_STEADY;
+    
+    return COLOR_RESET;
+}
+
 static void report_stats(sqlite3 *db, const char *time_filter)
 {
     Session ss[MAX_SESSIONS];
@@ -64,7 +115,6 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     
     if (time_filter)
         count = db_get_sessions_filtered(db, ss, MAX_SESSIONS, time_filter);
-
     else
         count = db_get_all_sessions(db, ss, MAX_SESSIONS);
     
@@ -78,7 +128,6 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     double best_pct = -1.0, worst_pct = 101.0;
     int best_id = -1, worst_id = -1;
     double sum_fgm = 0.0, sum_fga = 0.0;
-    double sum_pct = 0.0;
     
     for (int i = 0; i < count; i++)
     {
@@ -86,7 +135,6 @@ static void report_stats(sqlite3 *db, const char *time_filter)
         total_fga += ss[i].fga;
         sum_fgm += ss[i].fgm;
         sum_fga += ss[i].fga;
-        sum_pct += ss[i].fg_pct;
         
         if (ss[i].fg_pct > best_pct)
         {
@@ -106,35 +154,7 @@ static void report_stats(sqlite3 *db, const char *time_filter)
                             : 0.0;
     double avg_fgm = sum_fgm / count;
     double avg_fga = sum_fga / count;
-    double mean_pct = sum_pct / count;
 
-    double var_sum = 0.0;
-    for (int i = 0; i < count; i++)
-    {
-        double diff = ss[i].fg_pct - mean_pct;
-        var_sum += diff * diff;
-    }
-    double stddev = sqrt(var_sum / count);
-
-    int last10_count = (count < 10) ? count : 10;
-    double stddev_last10 = 0.0;
-    if (last10_count > 0)
-    {
-        double sum_pct10 = 0.0;
-        int start = count - last10_count;
-        for (int i = start; i < count; i++)
-            sum_pct10 += ss[i].fg_pct;
-        
-        double mean_pct10 = sum_pct10 / last10_count;
-        double var_sum10 = 0.0;
-        for (int i = start; i < count; i++)
-        {
-            double diff = ss[i].fg_pct - mean_pct10;
-            var_sum10 += diff * diff;
-        }
-        stddev_last10 = sqrt(var_sum10 / last10_count);
-    }
-    
     printf("\n=== Career Stats (sessions: %d) ===\n", count);
     printf("  Total FGM: %d\n", total_fgm);
     printf("  Total FGA: %d\n", total_fga);
@@ -142,9 +162,31 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     printf("  Best session: [%d] %.1f%%\n", best_id, best_pct);
     printf("  Worst session: [%d] %.1f%%\n", worst_id, worst_pct);
     printf("  Avg makes/session: %.1f\n", avg_fgm);
-    printf("  Avg attempts/session : %.1f\n", avg_fga);
-    printf("  Std dev (FG%%): %.2f%%\n", stddev);
-    printf("  Std dev last 10: %.2f%%\n", stddev_last10);
+    printf("  Avg attempts/session: %.1f\n", avg_fga);
+    
+    // Calculate and display trend
+    const char* trend = get_trend(ss, count, 5);
+    if (trend == NULL) {
+        printf("  Shooting trend: Not enough data for trend analysis (need at least 3 sessions)\n");
+    } else {
+        // Calculate averages for display
+        double overall_sum = 0.0;
+        for (int i = 0; i < count; i++) {
+            overall_sum += ss[i].fg_pct;
+        }
+        double overall_avg = overall_sum / count;
+        
+        int n = (5 < count) ? 5 : count;
+        double recent_sum = 0.0;
+        for (int i = count - n; i < count; i++) {
+            recent_sum += ss[i].fg_pct;
+        }
+        double recent_avg = recent_sum / n;
+        
+        const char* color = get_trend_color(trend);
+        printf("  Shooting trend: %s%s%s (Recent avg: %.1f%% vs overall: %.1f%%)\n",
+               color, trend, COLOR_RESET, recent_avg, overall_avg);
+    }
     printf("\n");
 }
 
@@ -203,7 +245,9 @@ static void report_histogram(sqlite3 *db, const char *time_filter)
         else bar_len = 0;
 
         for (int j = 0; j < bar_len; j++)
-            printf("█");
+        {
+            printf("#");
+        }
         
         printf(" (%d)\n", bins[i]);
     }
@@ -294,7 +338,7 @@ static int parse_args(int argc, char *argv[], Args *out)
 
     int any = out->show_history + out->show_stats + out->show_histogram;
 
-    if (any == 0)  return -1;
+    if (any == 0) return -1;
 
     return 0;
 }
