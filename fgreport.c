@@ -12,7 +12,7 @@
 #define COLOR_RESET "\033[0m"
 #define COLOR_HOT "\033[38;5;214m"
 #define COLOR_COLD "\033[38;5;39m"
-#define COLOR_STEADY "\033[38;5;15"
+#define COLOR_STEADY "\033[38;5;15m"
 #define COLOR_BOLD "\033[1m"
 
 static const char* time_filter_sql(int opt_week, int opt_month, int opt_year)
@@ -166,19 +166,22 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     
     // Calculate and display trend
     const char* trend = get_trend(ss, count, 5);
-    if (trend == NULL) {
+    if (trend == NULL) 
         printf("  Shooting trend: Not enough data for trend analysis (need at least 3 sessions)\n");
-    } else {
+    else 
+    {
         // Calculate averages for display
         double overall_sum = 0.0;
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) 
+        {
             overall_sum += ss[i].fg_pct;
         }
         double overall_avg = overall_sum / count;
         
         int n = (5 < count) ? 5 : count;
         double recent_sum = 0.0;
-        for (int i = count - n; i < count; i++) {
+        for (int i = count - n; i < count; i++) 
+        {
             recent_sum += ss[i].fg_pct;
         }
         double recent_avg = recent_sum / n;
