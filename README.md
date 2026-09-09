@@ -16,7 +16,7 @@ Os dados são armazenados localmente em SQLite e podem ser consultados posterior
 ### fgreport - Gerador de relatórios
 
 - **Histórico completo**: Liste todas as sessões com datas e aproveitamentos
-- **Estatísticas da carreira**: Visualize métricas como total de arremessos, média de acertos, melhor/pior sessão e desvio padrão
+- **Estatísticas da carreira**: Visualize métricas como total de arremessos, média de acertos, melhor/pior sessão e tendência de desempenho
 - **Histograma de FG%**: Distribuição do aproveitamento em intervalos de 10%
 - **Filtros temporais**: Analise dados das últimas semanas, meses ou ano
 - **Últimas N sessões**: Foque nos registros mais recentes
@@ -166,24 +166,23 @@ Execute com diferentes opções para gerar relatórios personalizados:
   Worst session: [5] 20.0%
   Avg makes/session: 6.0
   Avg attempts/session: 11.2
-  Std dev (FG%): 12.34%
-  Std dev last 10: 8.45%
+  Shooting trend: HOT (Recent avg: 65.2% vs overall: 53.6%)
 ```
 
 **Histograma:**
 
 ```
 === FG% Histogram (10% bins) ===
-   0%–  9% : █ (2)
-  10%– 19% : ██ (3)
-  20%– 29% : ████ (5)
-  30%– 39% : ██████ (7)
-  40%– 49% : ███████████ (12)
-  50%– 59% : ████████████████ (18)
-  60%– 69% : ███████████ (12)
-  70%– 79% : ██████ (7)
-  80%– 89% : ███ (4)
-  90%–100% : █ (1)
+   0%–  9% : # (2)
+  10%– 19% : ## (3)
+  20%– 29% : #### (5)
+  30%– 39% : ###### (7)
+  40%– 49% : ########### (12)
+  50%– 59% : ################ (18)
+  60%– 69% : ########### (12)
+  70%– 79% : ###### (7)
+  80%– 89% : ### (4)
+  90%–100% : # (1)
 ```
 
 ## Estrutura do projeto
