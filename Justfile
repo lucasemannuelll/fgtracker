@@ -10,10 +10,10 @@ build-dir:
     mkdir -p build
 
 build-fgctl: build-dir
-    {{cc}} {{flags}} -o build/fgctl fgctl.c db.c {{libs}}
+    {{cc}} {{flags}} -o build/fgctl src/fgctl.c src/db.c {{libs}}
 
 build-fgreport: build-dir
-    {{cc}} {{flags}} -o build/fgreport fgreport.c db.c {{libs}}
+    {{cc}} {{flags}} -o build/fgreport src/fgreport.c src/db.c {{libs}}
 
 run: build-fgctl
     ./build/fgctl
