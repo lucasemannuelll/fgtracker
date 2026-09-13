@@ -86,11 +86,11 @@ static const char* get_trend(Session *sessions, int total_count, int recent_coun
 
     double diff = recent_avg - overall_avg;
     if (diff > 5.0) 
-        return "QUENTE";
+        return "↑ EM ALTA";
     else if (diff < -5.0) 
-        return "FRIO";
+        return "↓ EM BAIXA";
     else 
-        return "ESTÁVEL";
+        return "= NA MÉDIA";
 }
 
 static const char* get_trend_color(const char* trend)
@@ -98,11 +98,11 @@ static const char* get_trend_color(const char* trend)
     if (trend == NULL)
         return COLOR_RESET;
     
-    if (strcmp(trend, "QUENTE") == 0)
+    if (strcmp(trend, "↑ EM ALTA") == 0)
         return COLOR_HOT;
-    else if (strcmp(trend, "FRIO") == 0)
+    else if (strcmp(trend, "↓ EM BAIXA") == 0)
         return COLOR_COLD;
-    else if (strcmp(trend, "ESTÁVEL") == 0)
+    else if (strcmp(trend, "= NA MÉDIA") == 0)
         return COLOR_STEADY;
     
     return COLOR_RESET;
@@ -127,6 +127,8 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     int total_fgm = 0, total_fga = 0;
     double best_pct = -1.0, worst_pct = 101.0;
     int best_id = -1, worst_id = -1;
+    int best_fgm = -1, best_fga = -1;
+    int worst_fgm = -1, worst_fga = -1;
     double sum_fgm = 0.0, sum_fga = 0.0;
     
     for (int i = 0; i < count; i++)
@@ -136,15 +138,23 @@ static void report_stats(sqlite3 *db, const char *time_filter)
         sum_fgm += ss[i].fgm;
         sum_fga += ss[i].fga;
         
-        if (ss[i].fg_pct > best_pct)
+        /* Best: higher pct wins; on tie, larger sample is more impressive */
+        if (ss[i].fg_pct > best_pct ||
+            (ss[i].fg_pct == best_pct && ss[i].fga > best_fga))
         {
             best_pct = ss[i].fg_pct;
+            best_fgm = ss[i].fgm;
+            best_fga = ss[i].fga;
             best_id = ss[i].id;
         }
 
-        if (ss[i].fg_pct < worst_pct)
+        /* Worst: lower pct loses; on tie, larger sample is more damning */
+        if (ss[i].fg_pct < worst_pct ||
+            (ss[i].fg_pct == worst_pct && ss[i].fga > worst_fga))
         {
             worst_pct = ss[i].fg_pct;
+            worst_fgm = ss[i].fgm;
+            worst_fga = ss[i].fga;
             worst_id = ss[i].id;
         }
     }
@@ -159,8 +169,8 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     printf("  Total de FGM: %d\n", total_fgm);
     printf("  Total de FGA: %d\n", total_fga);
     printf("  FG%% Geral: %.1f%%\n", overall_pct);
-    printf("  Melhor sessão: [%d] %.1f%%\n", best_id, best_pct);
-    printf("  Pior sessão: [%d] %.1f%%\n", worst_id, worst_pct);
+    printf("  Melhor sessão: [%d] %d/%d (%.1f%%)\n", best_id, best_fgm, best_fga, best_pct);
+    printf("  Pior sessão: [%d] %d/%d (%.1f%%)\n", worst_id, worst_fgm, worst_fga, worst_pct);
     printf("  Média de acertos/sessão: %.1f\n", avg_fgm);
     printf("  Média de tentativas/sessão: %.1f\n", avg_fga);
     
@@ -351,7 +361,11 @@ int main(int argc, char *argv[])
     Args args = {0};
     int parsed = parse_args(argc, argv, &args);
     
-    if (parsed == 1) return 0;
+    if (parsed == 1) 
+    {
+        print_usage(argv[0]);
+        return 0;
+    }
 
     if (parsed < 0)
     {
