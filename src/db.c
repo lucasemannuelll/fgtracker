@@ -19,7 +19,7 @@ int db_open(sqlite3 **db, const char *path)
     {
         fprintf(
             stderr,
-            "db_open: cannot open database: %s\n",
+            "db_open: não foi possível abrir o banco de dados: %s\n",
             sqlite3_errmsg(*db)
         );
         sqlite3_close(*db);
@@ -32,7 +32,7 @@ int db_open(sqlite3 **db, const char *path)
     
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "db_open: cannot create table: %s\n", err);
+        fprintf(stderr, "db_open: não foi possível criar a tabela: %s\n", err);
         sqlite3_free(err);
         sqlite3_close(*db);
         return -1;
@@ -66,7 +66,7 @@ int db_insert_session(sqlite3 *db, int fgm, int fga)
     {
         fprintf(
             stderr, 
-            "db_insert_session: prepare failed: %s\n", 
+            "db_insert_session: falha na preparação: %s\n", 
             sqlite3_errmsg(db)
         );
         return -1;
@@ -81,7 +81,7 @@ int db_insert_session(sqlite3 *db, int fgm, int fga)
     {
         fprintf(
             stderr, 
-            "db_insert_session: step failed: %s\n", 
+            "db_insert_session: falha na execução: %s\n", 
             sqlite3_errmsg(db)
         );
         return -1;
@@ -100,7 +100,7 @@ int db_update_session(sqlite3 *db, int id, int fgm, int fga)
     {
         fprintf(
             stderr, 
-            "db_update_session: prepare failed: %s\n", 
+            "db_update_session: falha na preparação: %s\n", 
             sqlite3_errmsg(db)
         );
         return -1;
@@ -117,7 +117,7 @@ int db_update_session(sqlite3 *db, int id, int fgm, int fga)
     {
         fprintf(
             stderr, 
-            "db_update_session: step failed: %s\n", 
+            "db_update_session: falha na execução: %s\n", 
             sqlite3_errmsg(db)
         );
         return -1;
@@ -125,7 +125,7 @@ int db_update_session(sqlite3 *db, int id, int fgm, int fga)
     
     if (sqlite3_changes(db) == 0) 
     {
-        fprintf(stderr, "db_update_session: no row with id = %d\n", id);
+        fprintf(stderr, "db_update_session: nenhuma linha com id = %d\n", id);
         return -1;
     }
     
@@ -142,7 +142,7 @@ int db_delete_session(sqlite3 *db, int id)
     {
         fprintf(
             stderr, 
-            "db_delete_session: prepare failed: %s\n", 
+            "db_delete_session: falha na preparação: %s\n", 
             sqlite3_errmsg(db)
         );
         return -1;
@@ -158,7 +158,7 @@ int db_delete_session(sqlite3 *db, int id)
     {
         fprintf(
             stderr, 
-            "db_delete_session: step failed: %s\n", 
+            "db_delete_session: falha na execução: %s\n", 
             sqlite3_errmsg(db)
         );
         return -1;
@@ -166,7 +166,7 @@ int db_delete_session(sqlite3 *db, int id)
     
     if (sqlite3_changes(db) == 0) 
     {
-        fprintf(stderr, "db_delete_session: no row with id = %d\n", id);
+        fprintf(stderr, "db_delete_session: nenhuma linha com id = %d\n", id);
         return -1;
     }
     
@@ -183,7 +183,7 @@ int db_get_session(sqlite3 *db, int id, Session *out)
     {
         fprintf(
             stderr, 
-            "db_get_session: prepare failed: %s\n", 
+            "db_get_session: falha na preparação: %s\n", 
             sqlite3_errmsg(db)
         );
         return -1;
@@ -213,7 +213,7 @@ int db_get_all_sessions(sqlite3 *db, Session *out, int capacity)
     {
         fprintf(
             stderr, 
-            "db_get_all_sessions: prepare failed: %s\n", 
+            "db_get_all_sessions: falha na preparação: %s\n", 
             sqlite3_errmsg(db)
         );
         return -1;
@@ -258,7 +258,7 @@ int db_get_sessions_filtered(sqlite3 *db, Session *out, int capacity,
     {
         fprintf(
             stderr, 
-            "db_get_sessions_filtered: prepare failed: %s\n", 
+            "db_get_sessions_filtered: falha na preparação: %s\n", 
             sqlite3_errmsg(db)
         );
         return -1;

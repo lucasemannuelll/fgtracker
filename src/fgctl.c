@@ -52,7 +52,7 @@ static int prompt_int(const char *prompt, int *out)
             return 0;
         }
         
-        printf("  Please enter a valid non-negative number.\n");
+        printf("  Por favor, digite um número válido não negativo.\n");
     }
 }
 
@@ -60,24 +60,24 @@ static void action_insert(sqlite3 *db)
 {
     int fgm, fga;
     
-    printf("\n--- New Session ---\n");
+    printf("\n--- Nova Sessão ---\n");
     
-    if (prompt_int("  FGM (makes): ", &fgm) < 0)
+    if (prompt_int("  FGM (acertos): ", &fgm) < 0)
         return;
     
-    if (prompt_int("  FGA (attempts): ", &fga) < 0)
+    if (prompt_int("  FGA (tentativas): ", &fga) < 0)
         return;
     
     if (fgm > fga)
     {
-        printf("  Error: makes cannot exceed attempts.\n");
+        printf("  Erro: acertos não podem exceder as tentativas.\n");
         return;
     }
     
     if (db_insert_session(db, fgm, fga) == 0)
-        printf("  Session saved.\n");
+        printf("  Sessão salva.\n");
     else
-        printf("  Failed to save session.\n");
+        printf("  Falha ao salvar a sessão.\n");
 }
 
 static void action_list(sqlite3 *db)
@@ -86,17 +86,17 @@ static void action_list(sqlite3 *db)
     int count = db_get_all_sessions(db, sessions, 256);
     if (count < 0) 
     {
-        printf("  Error fetching sessions.\n");
+        printf("  Erro ao buscar as sessões.\n");
         return;
     }
 
     if (count == 0) 
     {
-        printf("  No sessions saved yet.\n");
+        printf("  Nenhuma sessão salva ainda.\n");
         return;
     }
     // Fixed header alignment
-    printf("\n  %-4s | %-19s | %-7s | %s\n", "ID", "Date/time", "FGM/FGA", "FG%");
+    printf("\n  %-4s | %-19s | %-7s | %s\n", "ID", "Data/hora", "FGM/FGA", "FG%");
     printf("  %-4s-+-%-19s-+-%-7s-+-%s\n", "----", "-------------------", "-------", "-----");
     for (int i = 0; i < count; i++)
         print_session(&sessions[i]);
@@ -107,17 +107,17 @@ static void action_edit(sqlite3 *db)
 {
     char buf[32];
     
-    printf("\n--- Edit Session ---\n");
+    printf("\n--- Editar Sessão ---\n");
     action_list(db);
     
-    if (prompt_line("  Enter session ID to edit: ", buf, sizeof(buf)) < 0)
+    if (prompt_line("  Digite o ID da sessão para editar: ", buf, sizeof(buf)) < 0)
         return;
     
     char *endptr;
     long id_l = strtol(buf, &endptr, 10);
     if (*endptr != '\0') 
     {
-        printf("  Invalid ID.\n");
+        printf("  ID inválido.\n");
         return;
     }
     int id = (int)id_l;
@@ -125,13 +125,13 @@ static void action_edit(sqlite3 *db)
     Session existing;
     if (db_get_session(db, id, &existing) < 0)
     {
-        printf("  No session with this ID (%d).\n", id);
+        printf("  Nenhuma sessão com este ID (%d).\n", id);
         return;
     }
     
-    printf("  Current: ");
+    printf("  Atual: ");
     print_session(&existing);
-    printf("  (Press [Enter] to keep current value)\n\n");
+    printf("  (Clique [Enter] para manter o valor atual)\n\n");
     
     int fgm = existing.fgm;
     char tmp[32];
@@ -149,62 +149,62 @@ static void action_edit(sqlite3 *db)
     
     if (fgm > fga)
     {
-        printf("  Error: makes cannot exceed attempts.\n");
+        printf("  Erro: acertos não podem exceder as tentativas.\n");
         return;
     }
     
     if (db_update_session(db, id, fgm, fga) == 0)
-        printf("  Session updated.\n");
+        printf("  Sessão atualizada.\n");
 
     else
-        printf("  Failed to update session.\n");
+        printf("  Falha ao atualizar a sessão.\n");
 }
 
 static void action_delete(sqlite3 *db)
 {
     char buf[32];
     
-    printf("\n--- Delete session ---\n");
+    printf("\n--- Excluir sessão ---\n");
     action_list(db);
     
-    if (prompt_line("  Enter session ID to delete: ", buf, sizeof(buf)) < 0)
+    if (prompt_line("  Digite o ID da sessão para excluir: ", buf, sizeof(buf)) < 0)
         return;
     
     char *endptr;
     long id_l = strtol(buf, &endptr, 10);
     if (*endptr != '\0') 
     {
-        printf("  Invalid ID.\n");
+        printf("  ID Inválido.\n");
         return;
     }
     int id = (int)id_l;
 
     char confirm[8];
-    printf("  Delete session %d? (y/Y): ", id);
+    printf("  Excluir a sessão %d? (s/S): ", id);
     
     if (prompt_line("", confirm, sizeof(confirm)) < 0)
         return;
     
     if (confirm[0] != 'y' && confirm[0] != 'Y')
     {
-        printf("  Cancelled.\n");
+        printf("  Cancelado.\n");
         return;
     }
     
     if (db_delete_session(db, id) == 0)
-        printf("  Session deleted.\n");
+        printf("  Sessão excluída.\n");
     else
-        printf("  Failed to delete session.\n");
+        printf("  Falha ao excluir a sessão.\n");
 }
 
 static void print_menu(void)
 {
     printf("\n=== fgctl ===\n");
-    printf("  1. Add session\n");
-    printf("  2. List sessions\n");
-    printf("  3. Edit session\n");
-    printf("  4. Delete session\n");
-    printf("  5. Exit\n");
+    printf("  1. Adicionar sessão\n");
+    printf("  2. Listar sessões\n");
+    printf("  3. Editar sessão\n");
+    printf("  4. Excluir sessão\n");
+    printf("  5. Sair\n");
     printf("  > ");
 }
 
@@ -239,7 +239,7 @@ int main(void)
         long choice_l = strtol(line, &endptr, 10);
         if (*endptr != '\0')
         {
-            printf("  Invalid option.\n");
+            printf("  Opção inválida.\n");
             continue;
         }
 
@@ -263,13 +263,13 @@ int main(void)
                 running = 0;
                 break;
             default:
-                printf("  Invalid option.\n");
+                printf("  Opção inválida.\n");
                 break;
         }
     }
     
     db_close(db);
-    printf("Bye.\n");
+    printf("Au revoises.\n");
     
     return 0;
 }

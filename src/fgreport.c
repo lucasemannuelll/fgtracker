@@ -39,7 +39,7 @@ static void report_history(sqlite3 *db, int last_n, const char *time_filter)
     
     if (count <= 0)
     {
-        printf("  No sessions found.\n");
+        printf("  Nenhuma sessão encontrada.\n");
         return;
     }
     
@@ -47,7 +47,7 @@ static void report_history(sqlite3 *db, int last_n, const char *time_filter)
     if (last_n > 0 && last_n < count)
         start = count - last_n;
     
-    printf("\n  %-4s | %-19s | %7s | %6s\n", "ID", "Date/time", "FGM/FGA", "FG%%");
+    printf("\n  %-4s | %-19s | %7s | %6s\n", "ID", "Data/hora", "FGM/FGA", "FG%%");
     printf("  -----|---------------------|---------|-------\n");
     
     for (int i = start; i < count; i++)
@@ -86,11 +86,11 @@ static const char* get_trend(Session *sessions, int total_count, int recent_coun
 
     double diff = recent_avg - overall_avg;
     if (diff > 5.0) 
-        return "HOT";
+        return "QUENTE";
     else if (diff < -5.0) 
-        return "COLD";
+        return "FRIO";
     else 
-        return "STEADY";
+        return "ESTÁVEL";
 }
 
 static const char* get_trend_color(const char* trend)
@@ -98,11 +98,11 @@ static const char* get_trend_color(const char* trend)
     if (trend == NULL)
         return COLOR_RESET;
     
-    if (strcmp(trend, "HOT") == 0)
+    if (strcmp(trend, "QUENTE") == 0)
         return COLOR_HOT;
-    else if (strcmp(trend, "COLD") == 0)
+    else if (strcmp(trend, "FRIO") == 0)
         return COLOR_COLD;
-    else if (strcmp(trend, "STEADY") == 0)
+    else if (strcmp(trend, "ESTÁVEL") == 0)
         return COLOR_STEADY;
     
     return COLOR_RESET;
@@ -120,7 +120,7 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     
     if (count <= 0)
     {
-        printf("  No sessions for the selected period.\n");
+        printf("  Nenhuma sessão para o período selecionado.\n");
         return;
     }
     
@@ -155,19 +155,19 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     double avg_fgm = sum_fgm / count;
     double avg_fga = sum_fga / count;
 
-    printf("\n=== Career Stats (sessions: %d) ===\n", count);
-    printf("  Total FGM: %d\n", total_fgm);
-    printf("  Total FGA: %d\n", total_fga);
-    printf("  Overall FG%%: %.1f%%\n", overall_pct);
-    printf("  Best session: [%d] %.1f%%\n", best_id, best_pct);
-    printf("  Worst session: [%d] %.1f%%\n", worst_id, worst_pct);
-    printf("  Avg makes/session: %.1f\n", avg_fgm);
-    printf("  Avg attempts/session: %.1f\n", avg_fga);
+    printf("\n=== Estatísticas Gerais (sessões: %d) ===\n", count);
+    printf("  Total de FGM: %d\n", total_fgm);
+    printf("  Total de FGA: %d\n", total_fga);
+    printf("  FG%% Geral: %.1f%%\n", overall_pct);
+    printf("  Melhor sessão: [%d] %.1f%%\n", best_id, best_pct);
+    printf("  Pior sessão: [%d] %.1f%%\n", worst_id, worst_pct);
+    printf("  Média de acertos/sessão: %.1f\n", avg_fgm);
+    printf("  Média de tentativas/sessão: %.1f\n", avg_fga);
     
     // Calculate and display trend
     const char* trend = get_trend(ss, count, 5);
     if (trend == NULL) 
-        printf("  Shooting trend: Not enough data for trend analysis (need at least 3 sessions)\n");
+        printf("  Tendência de arremesso: Dados insuficientes para análise de tendência (mínimo de 3 sessões)\n");
     else 
     {
         // Calculate averages for display
@@ -187,7 +187,7 @@ static void report_stats(sqlite3 *db, const char *time_filter)
         double recent_avg = recent_sum / n;
         
         const char* color = get_trend_color(trend);
-        printf("  Shooting trend: %s%s%s (Recent avg: %.1f%% vs overall: %.1f%%)\n",
+        printf("  Tendência de arremesso: %s%s%s (Média recente: %.1f%% vs geral: %.1f%%)\n",
                color, trend, COLOR_RESET, recent_avg, overall_avg);
     }
     printf("\n");
@@ -205,7 +205,7 @@ static void report_histogram(sqlite3 *db, const char *time_filter)
     
     if (count <= 0)
     {
-        printf("  No sessions found.\n");
+        printf("  Nenhuma sessão encontrada.\n");
         return;
     }
     
@@ -228,7 +228,7 @@ static void report_histogram(sqlite3 *db, const char *time_filter)
             max_count = bins[i];
     }
     
-    printf("\n=== FG%% Histogram (10%% bins) ===\n");
+    printf("\n=== Histograma de FG%% (intervalos de 10%%) ===\n");
     for (int i = 0; i < 10; i++)
     {
         int low = i * 10;
@@ -270,17 +270,17 @@ typedef struct {
 
 static void print_usage(const char *prog)
 {
-    printf("Usage: %s [--history] [--stats] [--histogram] [--last N] "
+    printf("Uso: %s [--history] [--stats] [--histogram] [--last N] "
            "[--week] [--month] [--year] [--help]\n", prog);
-    printf("Options:\n");
-    printf("  --history       list all sessions (oldest first)\n");
-    printf("  --stats         career statistics\n");
-    printf("  --histogram     FG%% distribution (10%% bins)\n");
-    printf("  --last <N>      show last N sessions (with --history)\n");
-    printf("  --week          filter by last 7 days\n");
-    printf("  --month         filter by last 30 days\n");
-    printf("  --year          filter by last 365 days\n");
-    printf("  -h, --help      show this help\n");
+    printf("Opções:\n");
+    printf("  --history       listar todas as sessões (mais antigas primeiro)\n");
+    printf("  --stats         estatísticas gerais\n");
+    printf("  --histogram     distribuição de FG%% (intervalos de 10%%)\n");
+    printf("  --last <N>      mostrar as últimas N sessões (com --history)\n");
+    printf("  --week          filtrar pelos últimos 7 dias\n");
+    printf("  --month         filtrar pelos últimos 30 dias\n");
+    printf("  --year          filtrar pelos últimos 365 dias\n");
+    printf("  -h, --help      mostrar esta ajuda\n");
 }
 
 static int parse_args(int argc, char *argv[], Args *out)
@@ -305,7 +305,7 @@ static int parse_args(int argc, char *argv[], Args *out)
         {
             if (i + 1 >= argc) 
             {
-                fprintf(stderr, "fgreport: --last requires an argument\n");
+                fprintf(stderr, "fgreport: --last requer um argumento\n");
                 return -1;
             }
             i++;
@@ -315,7 +315,7 @@ static int parse_args(int argc, char *argv[], Args *out)
             {
                 fprintf(
                     stderr, 
-                    "fgreport: --last requires a non-negative integer\n"
+                    "fgreport: --last requer um número inteiro não negativo\n"
                 );
                 return -1;
             }
@@ -324,7 +324,7 @@ static int parse_args(int argc, char *argv[], Args *out)
 
         else 
         {
-            fprintf(stderr, "fgreport: unknown option '%s'\n", argv[i]);
+            fprintf(stderr, "fgreport: opção desconhecida '%s'\n", argv[i]);
             return -1;
         }
     }
@@ -334,7 +334,7 @@ static int parse_args(int argc, char *argv[], Args *out)
     {
         fprintf(
             stderr, 
-            "fgreport: use only one of --week, --month, --year\n"
+            "fgreport: use apenas uma das opções --week, --month, --year\n"
         );
         return -1;
     }
