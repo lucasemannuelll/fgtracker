@@ -185,7 +185,7 @@ static void action_delete(sqlite3 *db)
     if (prompt_line("", confirm, sizeof(confirm)) < 0)
         return;
     
-    if (confirm[0] != 'y' && confirm[0] != 'Y')
+    if (confirm[0] != 's' && confirm[0] != 'S')
     {
         printf("  Cancelado.\n");
         return;

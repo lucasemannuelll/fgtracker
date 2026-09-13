@@ -271,7 +271,6 @@ typedef struct {
     int show_history;
     int show_stats;
     int show_histogram;
-    int show_lottery;
     int last_n;
     int filter_week;
     int filter_month;

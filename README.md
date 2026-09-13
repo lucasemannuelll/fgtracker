@@ -1,98 +1,70 @@
 # fgtracker
+Um par de utilitários de linha de comando para registrar e analisar sessões de arremesso (FG% — Field Goal Percentage).
 
-Ferramenta de linha de comando para registrar sessões de arremesso no basquete e acompanhar o aproveitamento ao longo do tempo.
+- **fgctl**: gerencia as sessões (adicionar, listar, editar, excluir).
+- **fgreport**: gera relatórios (histórico, estatísticas e histograma).
 
-Os dados são armazenados localmente em SQLite e podem ser consultados posteriormente através de relatórios no terminal.
+Os dados são armazenados em um banco SQLite local (`stats.db`).
 
-## Funcionalidades
+## Requisitos
 
-### fgctl - Gerenciador interativo de sessões
+- Um compilador C (ex: `cc`/`gcc`/`clang`)
+- SQLite3 (biblioteca de desenvolvimento)
+- Opcional: `make` ou `just` para build/instalação
 
-- **Adicionar sessão**: Registre novas sessões de treino informando FGM (cestas convertidas) e FGA (tentativas)
-- **Listar sessões**: Visualize todas as sessões registradas em ordem cronológica
-- **Editar sessão**: Atualize os dados de uma sessão existente pelo ID
-- **Excluir sessão**: Remova sessões indesejadas com confirmação
+## Compilando
 
-### fgreport - Gerador de relatórios
+Com `make`:
 
-- **Histórico completo**: Liste todas as sessões com datas e aproveitamentos
-- **Estatísticas da carreira**: Visualize métricas como total de arremessos, média de acertos, melhor/pior sessão e tendência de desempenho
-- **Histograma de FG%**: Distribuição do aproveitamento em intervalos de 10%
-- **Filtros temporais**: Analise dados das últimas semanas, meses ou ano
-- **Últimas N sessões**: Foque nos registros mais recentes
-
-## Estrutura dos dados
-
-Cada sessão registrada contém:
-
-- **ID**: Identificador único (gerado automaticamente)
-- **Data/hora**: Timestamp do registro
-- **FGM**: Field Goals Made (cestas convertidas)
-- **FGA**: Field Goals Attempted (tentativas)
-- **FG%**: Aproveitamento calculado automaticamente
-
-## Dependências
-
-Para compilar o projeto é necessário ter:
-
-- GCC ou Clang
-- SQLite3
-- Arquivos de desenvolvimento do SQLite (`libsqlite3-dev` em distribuições Debian/Ubuntu)
-
-### Instalando dependências no Ubuntu/Debian
-
-```bash
-sudo apt update
-sudo apt install build-essential libsqlite3-dev
+```sh
+make build
 ```
 
-### Instalando dependências no macOS
+Ou com `just`:
 
-```bash
-brew install sqlite3
-```
-
-## Compilação
-
-### Usando Just (recomendado)
-
-```bash
+```sh
 just build
 ```
 
-### Compilação manual
+Os binários são gerados em `build/`.
 
-Crie o diretório de build:
+## Instalando
 
-```bash
-mkdir -p build
+Por padrão instala em `~/.local/bin` (sem precisar de `sudo`):
+
+```sh
+make install
+# ou
+just install
 ```
 
-Compile o gerenciador de sessões:
+Para outro prefixo:
 
-```bash
-gcc -Wall -Wextra -O3 -o build/fgctl fgctl.c db.c -lsqlite3 -lm
+```sh
+make install PREFIX=/usr/local
+just PREFIX=/usr/local install
 ```
 
-Compile o gerador de relatórios:
+Para desinstalar:
 
-```bash
-gcc -Wall -Wextra -O3 -o build/fgreport fgreport.c db.c -lsqlite3 -lm
+```sh
+make uninstall
+just uninstall
 ```
 
 ## Uso
 
-### fgctl - Gerenciador interativo
+### fgctl
 
-Execute o programa e siga o menu interativo:
+Menu interativo para gerenciar as sessões:
 
-```bash
-./build/fgctl
+```sh
+fgctl
 ```
 
-Menu disponível:
+Opções do menu interativo:
 
-```
+```sh
 === fgctl ===
   1. Adicionar sessão
   2. Listar sessões
@@ -102,109 +74,51 @@ Menu disponível:
   > 
 ```
 
-### fgreport - Gerador de relatórios
+### fgreport
 
-Execute com diferentes opções para gerar relatórios personalizados:
+Opções disponíveis no CLI:
 
-```bash
-# Mostrar todas as sessões
-./build/fgreport --history
+| Opção          | Descrição                                                   |
+| -------------- | ----------------------------------------------------------- |
+| `--history`    | Lista as sessões (mais antigas primeiro)                    |
+| `--stats`      | Estatísticas gerais (melhor/pior sessão, médias, tendência) |
+| `--histogram`  | Histograma de FG% em intervalos de 10%                      |
+| `--last N`     | Mostra apenas as últimas N sessões (com `--history`)        |
+| `--week`       | Filtra pelos últimos 7 dias                                 |
+| `--month`      | Filtra pelos últimos 30 dias                                |
+| `--year`       | Filtra pelos últimos 365 dias                               |
+| `-h`, `--help` | Mostra a ajuda                                              |
 
-# Mostrar estatísticas da carreira
-./build/fgreport --stats
+Exemplos:
 
-# Mostrar histograma de aproveitamento
-./build/fgreport --histogram
-
-# Combinar opções
-./build/fgreport --history --stats --histogram
-
-# Filtrar por período
-./build/fgreport --history --week     # Últimos 7 dias
-./build/fgreport --stats --month      # Último mês
-./build/fgreport --histogram --year   # Último ano
-
-# Mostrar apenas as últimas 10 sessões
-./build/fgreport --history --last 10
-
-# Ajuda
-./build/fgreport --help
+```sh
+fgreport --history --last 10
+fgreport --stats --month
+fgreport --histogram --week
 ```
 
-#### Opções disponíveis
+> Obs: use apenas um dos filtros de tempo (`--week`, `--month`, `--year`) por vez.
 
-| Opção | Descrição |
-|-------|-----------|
-| `--history` | Lista todas as sessões (mais antigas primeiro) |
-| `--stats` | Exibe estatísticas da carreira |
-| `--histogram` | Mostra distribuição do FG% em bins de 10% |
-| `--last N` | Mostra apenas as últimas N sessões (com `--history`) |
-| `--week` | Filtra pelos últimos 7 dias |
-| `--month` | Filtra pelo último mês |
-| `--year` | Filtra pelo último ano |
-| `-h, --help` | Exibe a ajuda |
+## Dados de teste (opcional)
 
-#### Exemplo de saída
+O script `seed.py` popula o banco com sessões aleatórias dos últimos 365 dias:
 
-**Relatório de histórico:**
-
-```
-  ID   | Data/hora           | FGM/FGA | FG%
-  -----|---------------------|---------|-------
-  1    | 2026-01-15 14:30:00 |   5/10  |  50.0%
-  2    | 2026-01-16 10:15:00 |   8/12  |  66.7%
-```
-
-**Relatório estatístico:**
-
-```
-=== Career Stats (sessions: 25) ===
-  Total FGM: 150
-  Total FGA: 280
-  Overall FG%: 53.6%
-  Best session: [12] 80.0%
-  Worst session: [5] 20.0%
-  Avg makes/session: 6.0
-  Avg attempts/session: 11.2
-  Shooting trend: HOT (Recent avg: 65.2% vs overall: 53.6%)
-```
-
-**Histograma:**
-
-```
-=== FG% Histogram (10% bins) ===
-   0%–  9% : # (2)
-  10%– 19% : ## (3)
-  20%– 29% : #### (5)
-  30%– 39% : ###### (7)
-  40%– 49% : ########### (12)
-  50%– 59% : ################ (18)
-  60%– 69% : ########### (12)
-  70%– 79% : ###### (7)
-  80%– 89% : ### (4)
-  90%–100% : # (1)
+```sh
+python3 seed.py
 ```
 
 ## Estrutura do projeto
 
 ```
-fgtracker/
-├── db.c              # Operações com banco de dados SQLite
-├── db.h              # Interface do banco de dados
-├── models.h          # Definição da estrutura Session
-├── fgctl.c           # Gerenciador interativo de sessões
-├── fgreport.c        # Gerador de relatórios
-├── stats.db          # Banco de dados SQLite (criado automaticamente)
-└── README.md         # Este arquivo
+db.c / db.h          # camada de acesso ao banco SQLite
+models.h             # struct Session e caminho do banco (DB_PATH)
+fgctl.c              # CLI interativa de gerenciamento
+fgreport.c           # CLI de relatórios
+seed.py              # gerador de dados de teste
+Makefile.txt         # build/install via make (renomeie para Makefile)
+Justfile.txt         # build/install via just (renomeie para Justfile)
 ```
-
-## Observações
-
-- O banco de dados (`stats.db`) é criado automaticamente na primeira execução
-- Todos os dados permanecem armazenados localmente
-- Não há sincronização ou integração com serviços externos
-- O campo `datetime` é preenchido automaticamente com a data/hora local do sistema
 
 ## Licença
 
-Este projeto é de uso livre para fins educacionais e pessoais.
+Este projeto não possui licença definida.
