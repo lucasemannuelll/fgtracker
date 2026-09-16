@@ -64,32 +64,39 @@ static void report_history(sqlite3 *db, int last_n, const char *time_filter)
 
 static const char* get_trend(Session *sessions, int total_count, int recent_count)
 {
-    if (total_count < 3) 
+    if (total_count < 3)
         return NULL;
 
-    double overall_sum = 0.0;
+    /* --- Overall (weighted): total makes / total attempts --- */
+    int total_fgm = 0, total_fga = 0;
     for (int i = 0; i < total_count; i++)
     {
-        overall_sum += sessions[i].fg_pct;
+        total_fgm += sessions[i].fgm;
+        total_fga += sessions[i].fga;
     }
+    double overall_avg = (total_fga > 0)
+                            ? (double)total_fgm / total_fga * 100.0
+                            : 0.0;
 
-    double overall_avg = overall_sum / total_count;
-
+    /* --- Recent (weighted): last N sessions --- */
     int n = (recent_count < total_count) ? recent_count : total_count;
-    double recent_sum = 0.0;
+    int recent_fgm = 0, recent_fga = 0;
     for (int i = total_count - n; i < total_count; i++)
     {
-        recent_sum += sessions[i].fg_pct;
+        recent_fgm += sessions[i].fgm;
+        recent_fga += sessions[i].fga;
     }
-
-    double recent_avg = recent_sum / n;
+    double recent_avg = (recent_fga > 0)
+                            ? (double)recent_fgm / recent_fga * 100.0
+                            : 0.0;
 
     double diff = recent_avg - overall_avg;
-    if (diff > 5.0) 
+
+    if (diff > 5.0)
         return "↑ EM ALTA";
-    else if (diff < -5.0) 
+    else if (diff < -5.0)
         return "↓ EM BAIXA";
-    else 
+    else
         return "= NA MÉDIA";
 }
 
@@ -174,31 +181,30 @@ static void report_stats(sqlite3 *db, const char *time_filter)
     printf("  Média de acertos/sessão: %.1f\n", avg_fgm);
     printf("  Média de tentativas/sessão: %.1f\n", avg_fga);
     
-    // Calculate and display trend
+    // Calculate trend (weighted)
     const char* trend = get_trend(ss, count, 5);
-    if (trend == NULL) 
-        printf("  Tendência de arremesso: Dados insuficientes para análise de tendência (mínimo de 3 sessões)\n");
-    else 
+    if (trend == NULL)
     {
-        // Calculate averages for display
-        double overall_sum = 0.0;
-        for (int i = 0; i < count; i++) 
-        {
-            overall_sum += ss[i].fg_pct;
-        }
-        double overall_avg = overall_sum / count;
-        
+        printf("  Tendência de arremesso: Dados insuficientes para análise de tendência (mínimo de 3 sessões)\n");
+    }
+    else
+    {
+        // Recent weighted average: last 5 sessions
         int n = (5 < count) ? 5 : count;
-        double recent_sum = 0.0;
-        for (int i = count - n; i < count; i++) 
+        int recent_fgm = 0, recent_fga = 0;
+        for (int i = count - n; i < count; i++)
         {
-            recent_sum += ss[i].fg_pct;
+            recent_fgm += ss[i].fgm;
+            recent_fga += ss[i].fga;
         }
-        double recent_avg = recent_sum / n;
-        
+        double recent_avg = (recent_fga > 0)
+                                ? (double)recent_fgm / recent_fga * 100.0
+                                : 0.0;
+
+        // Overall weighted average == overall_pct already computed above
         const char* color = get_trend_color(trend);
         printf("  Tendência de arremesso: %s%s%s (Média recente: %.1f%% vs geral: %.1f%%)\n",
-               color, trend, COLOR_RESET, recent_avg, overall_avg);
+               color, trend, COLOR_RESET, recent_avg, overall_pct);
     }
     printf("\n");
 }
