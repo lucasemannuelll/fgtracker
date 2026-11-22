@@ -3,12 +3,11 @@
 
 #define DB_PATH "stats.db"
 
-typedef struct 
-{
-    int    id;
-    char   datetime[32];
-    int    fgm;
-    int    fga;
+typedef struct {
+    int id;
+    char datetime[32];
+    int fgm;
+    int fga;
     double fg_pct;
 } Session;
 

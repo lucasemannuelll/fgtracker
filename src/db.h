@@ -14,6 +14,6 @@ int db_delete_session(sqlite3 *db, int id);
 int db_get_session(sqlite3 *db, int id, Session *out);
 int db_get_all_sessions(sqlite3 *db, Session *out, int capacity);
 int db_get_sessions_filtered(sqlite3 *db, Session *out, int capacity,
-                            const char *time_filter);
+                             const char *time_filter);
 
 #endif
